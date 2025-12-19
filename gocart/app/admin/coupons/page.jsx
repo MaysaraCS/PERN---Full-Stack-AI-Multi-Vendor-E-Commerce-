@@ -71,9 +71,6 @@ export default function AdminCoupons() {
             } catch (error) {
                 toast.error(error?.response?.data?.error || error.message);
             }
-
-
-
         }
 
         useEffect(() => {

@@ -6,22 +6,37 @@ import { ArrowRightIcon } from "lucide-react"
 import SellerNavbar from "./StoreNavbar"
 import SellerSidebar from "./StoreSidebar"
 import { dummyStoreData } from "@/assets/assets"
+import { useAuth} from "@clerk/nextjs"
+import axios from "axios"
 
 const StoreLayout = ({ children }) => {
 
 
+    const {getToken, userId, isLoaded} = useAuth();
     const [isSeller, setIsSeller] = useState(false)
     const [loading, setLoading] = useState(true)
     const [storeInfo, setStoreInfo] = useState(null)
 
     const fetchIsSeller = async () => {
-        setIsSeller(true)
-        setStoreInfo(dummyStoreData)
-        setLoading(false)
+        try {
+            const token = await getToken();
+            const {data} = await axios.get("/api/store/is-seller", {headers: {
+                Authorization: `Bearer ${token}`
+            }})
+            setIsSeller(data.isSeller);
+            setStoreInfo(data.storeInfo);
+        } catch (error) {
+            console.log(error);
+        }finally{
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
-        fetchIsSeller()
+        fetchIsSeller();
+        if (isLoaded) {
+    console.log("Correct Clerk userId:", userId);
+  }
     }, [])
 
     return loading ? (
