@@ -13,7 +13,6 @@ export default function CreateStore() {
     const { user } = useUser();
     const router = useRouter();
     const { getToken } = useAuth();
-
     const [alreadySubmitted, setAlreadySubmitted] = useState(false)
     const [status, setStatus] = useState("")
     const [loading, setLoading] = useState(true)
@@ -107,6 +106,8 @@ try {
         } catch (error) {
                toast.error(error?.response?.data?.error || error.message);
         }
+
+
     }
 
     useEffect(() => {
@@ -125,6 +126,7 @@ try {
     </div>
   );
 }
+
     return !loading ? (
         <>
             {!alreadySubmitted ? (

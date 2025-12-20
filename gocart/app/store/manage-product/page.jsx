@@ -4,28 +4,60 @@ import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Loading from "@/components/Loading"
 import { productDummyData } from "@/assets/assets"
+import { useAuth, useUser } from "@clerk/nextjs"
+import axios from "axios"
 
 export default function StoreManageProducts() {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
 
+    const {getToken} = useAuth();
+    const {user} = useUser();
     const [loading, setLoading] = useState(true)
     const [products, setProducts] = useState([])
 
     const fetchProducts = async () => {
-        setProducts(productDummyData)
-        setLoading(false)
+       try {
+        const token = await getToken();
+        const { data } = await axios.get('/api/product', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            setProducts(data.products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+       } catch (error) {
+          toast.error(error?.response?.data?.error || error.message);
+       }finally{
+        setLoading(false);
+       }
     }
 
     const toggleStock = async (productId) => {
         // Logic to toggle the stock of a product
+        try {
+             const token = await getToken();
+        const { data } = await axios.post('/api/store/stock-toggle', { productId }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            setProducts(prevProducts => prevProducts.map(product => product.id === productId ? {...product, inStock: !product.inStock} : product));
+            toast.success(data.message);
+        } catch (error) {
+            toast.error(error?.response?.data?.error || error.message);
+        }
 
 
     }
 
     useEffect(() => {
-            fetchProducts()
-    }, [])
+            if(user)
+            {
+                fetchProducts();
+            }
+    }, [user])
 
     if (loading) return <Loading />
 
