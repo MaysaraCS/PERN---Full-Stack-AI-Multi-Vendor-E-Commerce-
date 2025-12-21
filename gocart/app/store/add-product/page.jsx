@@ -28,6 +28,7 @@ export default function StoreAddProduct() {
         // 🖼️ Update local image preview state
         setImages(prev => ({ ...prev, [key]: file }));
 
+        // 🧠 Agar pehla image upload ho raha hai aur AI abhi tak use nahi hua
         if (key === "1" && file && !aiUsed) {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -38,6 +39,7 @@ export default function StoreAddProduct() {
                 const token = await getToken();
 
                 try {
+                    // 🟢 AI API ko call karte hain aur toast me status show karte hain
                     await toast.promise(
                         axios.post(
                             "/api/store/ai",
