@@ -4,11 +4,17 @@ import { Star } from 'lucide-react';
 import React, { useState } from 'react'
 import { XIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@clerk/nextjs';
+import { useDispatch } from 'react-redux';
+import axios from 'axios';
+import { addRating } from '@/lib/features/rating/ratingSlice';
 
 const RatingModal = ({ ratingModal, setRatingModal }) => {
 
     const [rating, setRating] = useState(0);
     const [review, setReview] = useState('');
+    const {getToken} = useAuth();
+    const dispatch = useDispatch();
 
     const handleSubmit = async () => {
         if (rating < 0 || rating > 5) {
@@ -17,8 +23,39 @@ const RatingModal = ({ ratingModal, setRatingModal }) => {
         if (review.length < 5) {
             return toast('write a short review');
         }
+        try {
+  // 🔹 Get token for authorization
+  const token = await getToken();
 
-        setRatingModal(null);
+  // 🔹 Send POST request to /api/rating
+  const { data } = await axios.post(
+    "/api/rating",
+    {
+      productId: ratingModal.productId,
+      orderId: ratingModal.orderId,
+      rating,
+      review,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  // 🔹 Update Redux store with new rating
+  dispatch(addRating(data.rating));
+
+  // 🔹 Show success message
+  toast.success(data.message);
+
+  // 🔹 Close modal
+  setRatingModal(null);
+} catch (error) {
+  // 🔻 Handle error properly
+  toast.error(error?.response?.data?.error || error.message);
+}
+
     }
 
     return (
